@@ -1,38 +1,43 @@
-# Backend Programming — Final project / идея WhichOne
+# Backend Programming — Final Project Requirements
 
-Источник: `sources/final_tasks.pdf`, страницы 2–3. Ниже структурированный перевод требований; оригинальный PDF сохранён без изменений.
+## Some guidelines
 
-## Требования к началу работы
+- Don't copy your bookstore project and start to modify it. Start a new Spring Boot project with Spring initializr.
+- Comment your code and use recommended package structure.
+- Do not include copied and not formatted code from internet in large chunks where nobody has exact idea, what it does.
 
-- Не копировать Bookstore и не превращать его переименованием в итоговый проект. Создать новый Spring Boot-проект через Spring Initializr.
-- Комментировать код и использовать рекомендованную структуру пакетов.
-- Не добавлять большие неоформленные фрагменты чужого кода, назначение которых автор проекта не понимает.
+## Grade 1:
+- Adequate scope.
+- Project is turned in on-time. If not teacher reserves rights to do appropriate adjustment to the grade.
 
-Варианты тем в исходнике: запись артериального давления, база адресов для открыток, учёт рабочего времени, вход/регистрация/сброс пароля, бухгалтерское приложение с мобильным доступом, приложение по хобби. Это примеры, а не отдельные задания.
+## Grade 2:
+- Adequate scope.
+- Project is turned in on-time. If not teacher reserves rights to do appropriate adjustment to the grade.
+- Contains database connection (can be in-memory db like H2).
+- Contains simple basic tests cases.
 
-## Критерии оценок из PDF
+## Grade 3-4:
+- Comprehensive scope.
+- Project is turned in on-time. If not teacher reserves rights to do appropriate adjustment to the grade.
+- Contains authentication.
+- Contains database connection.
+- Well structured and commented source code.
+- Contains multiple test cases.
+- Project can be found from GitHub.
 
-| Оценка | Указанные требования |
-|---|---|
-| 1 | Достаточный объём; сдача в срок |
-| 2 | Достаточный объём; срок; соединение с БД, допустима H2; простые тесты |
-| 3–4 | Более широкий объём; срок; аутентификация; БД; структурированный и прокомментированный код; несколько тестов; GitHub |
-| 5 | Широкий объём; срок; самостоятельно изученные возможности; возможности Spring Boot вне лекций; аутентификация; PostgreSQL или MariaDB; RESTful service указан как optional; структурированный и прокомментированный код; GitHub; развёртывание на сервере в интернете |
+## Grade 5:
+- Wide scope.
+- Project is turned in on-time. If not teacher reserves rights to do appropriate adjustment to the grade.
+- Contains some own things, which learned independently.
+- Using some spring boot functionalities that are not covered in the lectures.
+- Contains authentication.
+- Contains database connection to PostgreSQL or MariaDB.
+- Contains RESTful service (optional).
+- Well structured and commented source code.
+- Project can be found from GitHub.
+- Project is deployed to some server in the internet.
 
-При опоздании преподаватель оставляет право скорректировать оценку. Примеры возможностей вне лекций — MongoDB, вход через соцсети и другие. Они не отменяют отдельно указанный для оценки 5 пункт о PostgreSQL/MariaDB.
-
-## Предложенная идея WhichOne
-
-API, где пользователи создают и проходят quizzes двух типов: обучающие с баллами и личностные с результатом.
-
-- Регистрация и вход.
-- Создание викторин.
-- Прохождение викторин.
-- Лента викторин.
-- Статистика.
-
-Предложенный стек: Spring Boot, PostgreSQL, Spring Security + JWT, Spring Data JPA, Swagger / OpenAPI, Docker.
-
-JWT, Swagger и Docker входят в предложение, но не названы обязательными в общей шкале. Какой именно материал считается выходящим за лекции, из архива установить нельзя.
-
-[Разбор и этапы проекта](../guides/final-backend-whichone.md)
+## Examples of functionalities not covered in lectures:
+- MongoDB
+- Social media login
+- etc.
