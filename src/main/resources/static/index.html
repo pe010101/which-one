@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WhichOne — Quizzes</title>
+  <link rel="icon"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 40'%3E%3Crect width='40' height='40' rx='10' fill='%23106650'/%3E%3Ctext x='10' y='29' font-size='29' fill='white'%3E?%3C/text%3E%3C/svg%3E">
+  <link rel="stylesheet" href="/styles.css">
+  <script src="/app.js" defer></script>
+</head>
+
+<body>
+  <header>
+    <a class="brand" href="/">WhichOne<span>Learn. Choose. Discover your result.</span></a>
+    <a href="/swagger-ui.html">API Documentation ↗</a>
+  </header>
+  <main>
+    <section class="hero">
+      <p class="eyebrow">Final Project · Spring Boot</p>
+      <h1>Your next question<br>starts here.</h1>
+      <p>Create educational and personality quizzes. Take published quizzes and track your results.</p>
+    </section>
+    <p id="status" role="status" aria-live="polite">The feed is public. Sign in to create and take quizzes.</p>
+    <div class="columns">
+      <section class="panel">
+        <h2>1. Account</h2>
+        <form id="auth-form">
+          <label for="username">Username: 3–30 Latin letters, digits or _</label>
+          <input id="username" name="username" autocomplete="username" minlength="3" maxlength="30" required>
+          <label for="password">Password: at least 10 characters</label>
+          <input id="password" name="password" type="password" autocomplete="current-password" minlength="10"
+            maxlength="72" required>
+          <div class="actions">
+            <button type="submit">Sign in</button>
+            <button type="button" id="register" class="secondary">Register</button>
+          </div>
+        </form>
+        <p id="account">Not signed in yet.</p>
+        <button id="logout" class="secondary" hidden>Sign out</button>
+        <p class="note">The token is stored only in this page's memory. You will need to sign in again after refreshing.
+        </p>
+      </section>
+      <section class="panel">
+        <h2>2. Your results</h2>
+        <div class="actions">
+          <button id="statistics" class="secondary" disabled>Statistics</button>
+          <button id="history" class="secondary" disabled>Attempt history</button>
+        </div>
+        <pre id="personal-output">Your request results will appear here.</pre>
+      </section>
+    </div>
+    <section class="panel">
+      <div class="section-heading">
+        <h2>3. Quiz feed</h2>
+        <div class="feed-actions">
+          <button id="refresh" class="secondary" type="button">Refresh</button>
+          <button id="seed" class="secondary" type="button" disabled>Seed test data</button>
+          <button id="delete-all" class="danger" type="button" disabled>Delete all mine</button>
+        </div>
+      </div>
+      <p id="feed-note" class="note">Sign in to add examples or delete your quizzes from the feed.</p>
+      <p id="feed-status" class="note" role="status" aria-live="polite"></p>
+      <div id="feed" class="quiz-grid"></div>
+    </section>
+    <section id="play-panel" class="panel" hidden>
+      <h2 id="quiz-title"></h2>
+      <p id="quiz-description"></p>
+      <form id="attempt-form">
+        <div id="questions"></div>
+        <button id="submit-attempt" type="submit" disabled>Submit answers</button>
+      </form>
+      <div id="result" role="status" aria-live="polite"></div>
+    </section>
+    <section class="panel">
+      <h2>4. Create your own quiz</h2>
+      <p>The editor accepts a full JSON definition. Correctness and weights are set by the author, while readers only
+        receive option texts. Once published, the quiz is permanently saved.</p>
+      <div class="actions">
+        <button id="educational-template" class="secondary">Educational template</button>
+        <button id="personality-template" class="secondary">Personality template</button>
+        <button id="mine" class="secondary" disabled>My quizzes</button>
+      </div>
+      <label for="definition">Quiz definition</label>
+      <textarea id="definition" spellcheck="false" rows="15"></textarea>
+      <label for="draft-id">Draft ID to modify, publish, or delete</label>
+      <input id="draft-id" type="number" min="1" inputmode="numeric">
+      <div class="actions">
+        <button id="create-draft" disabled>Create draft</button>
+        <button id="update-draft" class="secondary" disabled>Replace draft</button>
+        <button id="publish-draft" class="secondary" disabled>Publish permanently</button>
+        <button id="delete-draft" class="secondary" disabled>Delete draft</button>
+      </div>
+    </section>
+  </main>
+  <footer>WhichOne · The server validates answers, permissions, and results · <a href="/swagger-ui.html">OpenAPI</a>
+  </footer>
+</body>
+
+</html>
