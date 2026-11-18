@@ -56,22 +56,22 @@ function setAccount(auth = null) {
   closeQuiz();
   showFeedStatus("");
   byId("feed-note").textContent = auth
-    ? "Удаление из ленты сохраняет историю прохождений."
-    : "Войди, чтобы добавить примеры или удалить свои квизы из ленты.";
+    ? "Deleting from the feed preserves attempt history."
+    : "Log in to add examples or delete your quizzes from the feed.";
   updateFeedButtons();
   byId("draft-id").value = "";
   fillEditor(educationalTemplate());
-  byId("personal-output").textContent = "Запроси результаты текущего аккаунта.";
-  showStatus(auth ? "Аккаунт переключён. Загружается общая лента." : "Сеанс страницы завершён.");
+  byId("personal-output").textContent = "Request the current account's results.";
+  showStatus(auth ? "Account switched. Loading the shared feed." : "Page session ended.");
   byId("password").value = "";
   byId("username").value = auth ? auth.user.username : "";
-  byId("account").textContent = auth ? "Выполнен вход: " + auth.user.username : "Вход ещё не выполнен.";
+  byId("account").textContent = auth ? "Signed in as: " + auth.user.username : "Not signed in yet.";
   byId("logout").hidden = !auth;
   protectedButtons.forEach(id => { byId(id).disabled = !auth; });
   byId("submit-attempt").disabled = !auth || !currentQuiz || !currentQuiz.published;
   if (!auth) {
     byId("password").value = "";
-    byId("personal-output").textContent = "Войди, чтобы увидеть свои результаты.";
+    byId("personal-output").textContent = "Log in to see your results.";
     byId("result").textContent = "";
   }
   // Clear private DOM immediately, then fetch only the current account's public feed.
@@ -90,10 +90,10 @@ async function api(path, method = "GET", body = undefined, epoch = authEpoch) {
   if (!response.ok) {
     if (response.status === 401 && token) {
       setAccount(null);
-      showStatus("Сессия завершилась. Войди снова.", true);
+      showStatus("Session expired. Please log in again.", true);
     }
     const fields = data.errors ? " " + JSON.stringify(data.errors) : "";
-    throw new Error("HTTP " + response.status + ": " + (data.detail || "Запрос отклонён.") + fields);
+    throw new Error("HTTP " + response.status + ": " + (data.detail || "Request rejected.") + fields);
   }
   return data;
 }
@@ -106,36 +106,44 @@ async function action(work, reportError = showStatus) {
 }
 
 const educationalTemplate = () => ({
-  title: "Основы Java",
-  description: "Два вопроса. Максимум — 5 баллов.",
+  title: "Java Basics",
+  description: "Two questions. Maximum — 5 points.",
   type: "EDUCATIONAL", outcomes: [],
   questions: [
-    { text: "Чему равно 2 + 2?", points: 3, options: [
-      { text: "4", correct: true, weight: 0 }, { text: "5", correct: false, weight: 0 }
-    ] },
-    { text: "Какое слово объявляет класс?", points: 2, options: [
-      { text: "class", correct: true, weight: 0 }, { text: "table", correct: false, weight: 0 }
-    ] }
+    {
+      text: "What is 2 + 2?", points: 3, options: [
+        { text: "4", correct: true, weight: 0 }, { text: "5", correct: false, weight: 0 }
+      ]
+    },
+    {
+      text: "Which keyword declares a class?", points: 2, options: [
+        { text: "class", correct: true, weight: 0 }, { text: "table", correct: false, weight: 0 }
+      ]
+    }
   ]
 });
 
 const personalityTemplate = () => ({
-  title: "Как ты учишься?",
-  description: "Учебный пример с двумя исходами. При равенстве побеждает первый объявленный исход.",
+  title: "How do you learn?",
+  description: "Educational example with two outcomes. In a tie, the first declared outcome wins.",
   type: "PERSONALITY",
   outcomes: [
-    { code: "PLANNER", label: "Планировщик", description: "Тебе нравится сначала составить план." },
-    { code: "EXPLORER", label: "Исследователь", description: "Тебе нравится исследовать через практику." }
+    { code: "PLANNER", label: "Planner", description: "You like to make a plan first." },
+    { code: "EXPLORER", label: "Explorer", description: "You like to explore through practice." }
   ],
   questions: [
-    { text: "С чего ты начинаешь новую тему?", points: 0, options: [
-      { text: "Составляю план", correct: false, outcomeCode: "PLANNER", weight: 2 },
-      { text: "Пробую пример", correct: false, outcomeCode: "EXPLORER", weight: 2 }
-    ] },
-    { text: "Как тебе удобнее закреплять знания?", points: 0, options: [
-      { text: "По расписанию", correct: false, outcomeCode: "PLANNER", weight: 2 },
-      { text: "Через эксперименты", correct: false, outcomeCode: "EXPLORER", weight: 2 }
-    ] }
+    {
+      text: "How do you start a new topic?", points: 0, options: [
+        { text: "I make a plan", correct: false, outcomeCode: "PLANNER", weight: 2 },
+        { text: "I try an example", correct: false, outcomeCode: "EXPLORER", weight: 2 }
+      ]
+    },
+    {
+      text: "How do you prefer to reinforce knowledge?", points: 0, options: [
+        { text: "On a schedule", correct: false, outcomeCode: "PLANNER", weight: 2 },
+        { text: "Through experiments", correct: false, outcomeCode: "EXPLORER", weight: 2 }
+      ]
+    }
   ]
 });
 
@@ -152,38 +160,38 @@ function quizCards(quizzes, target, isMine = false) {
   target.replaceChildren();
   cardDeleteButtons = [];
   ownPublished = quizzes.some(quiz => quiz.published && quiz.author === username);
-  if (!quizzes.length) { target.append(element("p", "Пока нет квизов. Создай свой или добавь тестовые данные.")); }
+  if (!quizzes.length) { target.append(element("p", "No quizzes yet. Create your own or add test data.")); }
   for (const quiz of quizzes) {
     const card = element("article", undefined, "quiz-card");
-    card.append(element("p", quiz.type === "EDUCATIONAL" ? "Обучающий" : "Личностный", "tag"));
+    card.append(element("p", quiz.type === "EDUCATIONAL" ? "Educational" : "Personality", "tag"));
     card.append(element("h3", quiz.title));
     card.append(element("p", quiz.description));
-    card.append(element("p", quiz.questionCount + " вопроса · автор " + quiz.author));
-    const open = element("button", quiz.published ? "Открыть квиз" : "Посмотреть черновик");
+    card.append(element("p", quiz.questionCount + " questions · author " + quiz.author));
+    const open = element("button", quiz.published ? "Open quiz" : "View draft");
     open.addEventListener("click", () => action(async epoch => {
       await openQuiz(quiz.id, epoch);
       checkEpoch(epoch);
       if (isMine && !quiz.published) {
         byId("draft-id").value = quiz.id;
-        showStatus("Выбран черновик #" + quiz.id + ". Для изменения введи полный JSON определения.");
+        showStatus("Selected draft #" + quiz.id + ". To edit, enter the full quiz definition JSON.");
       }
     }));
     const actions = element("div", undefined, "card-actions");
     actions.append(open);
     if (username && quiz.author === username) {
-      const remove = element("button", "Удалить", "danger");
+      const remove = element("button", "Delete", "danger");
       remove.type = "button";
-      remove.setAttribute("aria-label", "Удалить квиз «" + quiz.title + "»");
+      remove.setAttribute("aria-label", "Delete quiz «" + quiz.title + "»");
       remove.addEventListener("click", () => {
-        const message = "Удалить квиз «" + quiz.title + "»?" +
-          (quiz.published ? " Сохранённые попытки останутся в истории." : "");
+        const message = "Delete quiz «" + quiz.title + "»?" +
+          (quiz.published ? " Saved attempts will remain in history." : "");
         if (window.confirm(message)) manageFeed(epoch => deleteQuiz(quiz, epoch));
       });
       cardDeleteButtons.push(remove);
       actions.append(remove);
     }
     card.append(actions);
-    if (isMine) card.append(element("p", "ID " + quiz.id + " · " + (quiz.published ? "опубликован" : "черновик")));
+    if (isMine) card.append(element("p", "ID " + quiz.id + " · " + (quiz.published ? "published" : "draft")));
     target.append(card);
   }
   updateFeedButtons();
@@ -220,7 +228,7 @@ async function deleteQuiz(quiz, epoch) {
   if (currentQuiz?.id === quiz.id) closeQuiz();
   if (byId("draft-id").value === String(quiz.id)) byId("draft-id").value = "";
   await refreshFeed(epoch);
-  showFeedStatus(quiz.published ? "Квиз удалён из ленты." : "Черновик удалён.");
+  showFeedStatus(quiz.published ? "Quiz removed from the feed." : "Draft deleted.");
 }
 
 async function openQuiz(id, epoch = authEpoch) {
@@ -258,7 +266,7 @@ async function authenticate(path, epoch = authEpoch) {
   checkEpoch(epoch);
   setAccount(auth);
   byId("password").value = "";
-  showStatus("Готово. Ты вошёл как " + auth.user.username + ".");
+  showStatus("Done. You are signed in as " + auth.user.username + ".");
 }
 
 byId("auth-form").addEventListener("submit", event => {
@@ -268,20 +276,20 @@ byId("auth-form").addEventListener("submit", event => {
 byId("register").addEventListener("click", () => action(epoch => authenticate("/api/auth/register", epoch)));
 byId("logout").addEventListener("click", () => {
   setAccount(null);
-  showStatus("Токен удалён из памяти страницы. Для нового запроса можно войти снова.");
+  showStatus("Token removed from page memory. You can log in again for a new request.");
 });
 byId("seed").addEventListener("click", () => manageFeed(async epoch => {
   const { count } = await api("/api/quizzes/demo", "POST", undefined, epoch);
   await refreshFeed(epoch);
-  showFeedStatus(count ? "Добавлено тестовых квизов: " + count + "." : "Оба тестовых квиза уже в ленте.");
+  showFeedStatus(count ? "Test quizzes added: " + count + "." : "Both test quizzes are already in the feed.");
 }));
 byId("delete-all").addEventListener("click", () => {
-  if (!window.confirm("Удалить из ленты все твои опубликованные квизы? Черновики и история прохождений сохранятся.")) return;
+  if (!window.confirm("Remove all your published quizzes from the feed? Drafts and attempt history will be preserved.")) return;
   manageFeed(async epoch => {
     const { count } = await api("/api/quizzes/mine/archive", "POST", undefined, epoch);
     if (currentQuiz?.published && currentQuiz.author === username) closeQuiz();
     await refreshFeed(epoch);
-    showFeedStatus(count ? "Удалено из ленты: " + count + "." : "У тебя нет опубликованных квизов.");
+    showFeedStatus(count ? "Removed from the feed: " + count + "." : "You have no published quizzes.");
   });
 });
 byId("refresh").addEventListener("click", () => action(epoch => refreshFeed(epoch, false), showFeedStatus));
@@ -289,58 +297,58 @@ byId("statistics").addEventListener("click", () => action(async epoch => {
   const result = await api("/api/me/statistics", "GET", undefined, epoch);
   checkEpoch(epoch);
   byId("personal-output").textContent = JSON.stringify(result, null, 2);
-  showStatus("Получена статистика твоих сохранённых попыток.");
+  showStatus("Retrieved statistics for your saved attempts.");
 }));
 byId("history").addEventListener("click", () => action(async epoch => {
   const result = await api("/api/me/attempts", "GET", undefined, epoch);
   checkEpoch(epoch);
   byId("personal-output").textContent = JSON.stringify(result, null, 2);
-  showStatus("Получена история твоих попыток.");
+  showStatus("Retrieved your attempt history.");
 }));
 byId("attempt-form").addEventListener("submit", event => {
   event.preventDefault();
   action(async epoch => {
     const quiz = currentQuiz;
-    if (!quiz) throw new Error("Сначала открой квиз текущего аккаунта.");
+    if (!quiz) throw new Error("Open a quiz for the current account first.");
     const answers = quiz.questions.map(question => {
       const selected = document.querySelector('input[name="question-' + question.id + '"]:checked');
-      if (!selected) throw new Error("Выбери один ответ на каждый вопрос.");
+      if (!selected) throw new Error("Select one answer for each question.");
       return { questionId: question.id, optionId: Number(selected.value) };
     });
     const result = await api("/api/quizzes/" + quiz.id + "/attempts", "POST", { answers }, epoch);
     checkEpoch(epoch);
     byId("result").textContent = result.type === "EDUCATIONAL"
-      ? "Твой результат: " + result.score + " из " + result.maxScore + " баллов."
+      ? "Your score: " + result.score + " out of " + result.maxScore + " points."
       : result.outcomeLabel + ". " + result.outcomeDescription;
-    showStatus("Попытка #" + result.id + " сохранена. Статистика обновится при запросе.");
+    showStatus("Attempt #" + result.id + " saved. Statistics will refresh on request.");
   });
 });
 byId("educational-template").addEventListener("click", () => fillEditor(educationalTemplate()));
 byId("personality-template").addEventListener("click", () => fillEditor(personalityTemplate()));
 byId("mine").addEventListener("click", () => action(async epoch => {
-  if (await refreshFeed(epoch, true)) showStatus("Показаны твои черновики и опубликованные квизы.");
+  if (await refreshFeed(epoch, true)) showStatus("Showing your drafts and published quizzes.");
 }));
 byId("create-draft").addEventListener("click", () => action(async epoch => {
   const quiz = await api("/api/quizzes", "POST", JSON.parse(byId("definition").value), epoch);
   checkEpoch(epoch);
   byId("draft-id").value = quiz.id;
-  showStatus("Создан черновик #" + quiz.id + ". Его можно изменить, затем опубликовать.");
+  showStatus("Draft #" + quiz.id + " created. You can edit it, then publish.");
 }));
 function draftId() {
   const id = Number(byId("draft-id").value);
-  if (!Number.isSafeInteger(id) || id < 1) throw new Error("Укажи положительный ID своего черновика.");
+  if (!Number.isSafeInteger(id) || id < 1) throw new Error("Enter a positive ID of your draft.");
   return id;
 }
 byId("update-draft").addEventListener("click", () => action(async epoch => {
   await api("/api/quizzes/" + draftId(), "PUT", JSON.parse(byId("definition").value), epoch);
   checkEpoch(epoch);
-  showStatus("Черновик заменён. ID вопросов и вариантов обновились.");
+  showStatus("Draft replaced. Question and option IDs have been updated.");
 }));
 byId("publish-draft").addEventListener("click", () => action(async epoch => {
   await api("/api/quizzes/" + draftId() + "/publish", "POST", undefined, epoch);
   await refreshFeed(epoch);
   checkEpoch(epoch);
-  showStatus("Квиз опубликован окончательно. Для изменений создай новый квиз.");
+  showStatus("Quiz published permanently. To make changes, create a new quiz.");
 }));
 byId("delete-draft").addEventListener("click", () => action(async epoch => {
   await api("/api/quizzes/" + draftId(), "DELETE", undefined, epoch);
@@ -348,7 +356,7 @@ byId("delete-draft").addEventListener("click", () => action(async epoch => {
   byId("draft-id").value = "";
   await refreshFeed(epoch);
   checkEpoch(epoch);
-  showStatus("Твой черновик удалён.");
+  showStatus("Your draft has been deleted.");
 }));
 
 fillEditor(educationalTemplate());

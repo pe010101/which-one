@@ -35,5 +35,4 @@ To understand how this project was built and the logic behind it, please read th
 - [Original Course Requirements](docs/materials/homework-2026-10-03/assignments/final-backend-whichone.md)
 
 ## Live Deployment
-* **Live URL:** [INSERT YOUR LIVE URL HERE]
-* **Swagger UI:** [INSERT YOUR SWAGGER URL HERE]
+* **Live URL:** [https://which-one-git-whichone.2.rahtiapp.fi/]
