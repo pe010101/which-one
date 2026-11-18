@@ -1,19 +1,55 @@
 {
-  "title": "Как ты учишься?",
-  "description": "При равенстве побеждает первый объявленный исход.",
+  "title": "How do you learn?",
+  "description": "A demo example with two outcomes. On a tie, the first declared outcome wins.",
   "type": "PERSONALITY",
   "outcomes": [
-    {"code": "PLANNER", "label": "Планировщик", "description": "Тебе нравится сначала составить план."},
-    {"code": "EXPLORER", "label": "Исследователь", "description": "Тебе нравится исследовать через практику."}
+    {
+      "code": "PLANNER",
+      "label": "Planner",
+      "description": "You like to plan first."
+    },
+    {
+      "code": "EXPLORER",
+      "label": "Explorer",
+      "description": "You like to learn through practice."
+    }
   ],
   "questions": [
-    {"text": "С чего ты начинаешь новую тему?", "points": 0, "options": [
-      {"text": "Составляю план", "correct": false, "outcomeCode": "PLANNER", "weight": 2},
-      {"text": "Пробую пример", "correct": false, "outcomeCode": "EXPLORER", "weight": 2}
-    ]},
-    {"text": "Как тебе удобнее закреплять знания?", "points": 0, "options": [
-      {"text": "По расписанию", "correct": false, "outcomeCode": "PLANNER", "weight": 2},
-      {"text": "Через эксперименты", "correct": false, "outcomeCode": "EXPLORER", "weight": 2}
-    ]}
+    {
+      "text": "How do you start a new topic?",
+      "points": 0,
+      "options": [
+        {
+          "text": "I make a plan",
+          "correct": false,
+          "outcomeCode": "PLANNER",
+          "weight": 2
+        },
+        {
+          "text": "I try an example",
+          "correct": false,
+          "outcomeCode": "EXPLORER",
+          "weight": 2
+        }
+      ]
+    },
+    {
+      "text": "How do you prefer to reinforce knowledge?",
+      "points": 0,
+      "options": [
+        {
+          "text": "By schedule",
+          "correct": false,
+          "outcomeCode": "PLANNER",
+          "weight": 2
+        },
+        {
+          "text": "Through experiments",
+          "correct": false,
+          "outcomeCode": "EXPLORER",
+          "weight": 2
+        }
+      ]
+    }
   ]
 }

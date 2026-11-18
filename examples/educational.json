@@ -1,16 +1,40 @@
 {
-  "title": "Основы Java",
-  "description": "Два вопроса. Максимум — 5 баллов.",
+  "title": "Java Basics",
+  "description": "Two questions. Maximum 5 points.",
   "type": "EDUCATIONAL",
   "outcomes": [],
   "questions": [
-    {"text": "Чему равно 2 + 2?", "points": 3, "options": [
-      {"text": "4", "correct": true, "weight": 0},
-      {"text": "5", "correct": false, "weight": 0}
-    ]},
-    {"text": "Какое слово объявляет класс?", "points": 2, "options": [
-      {"text": "class", "correct": true, "weight": 0},
-      {"text": "table", "correct": false, "weight": 0}
-    ]}
+    {
+      "text": "What is 2 + 2?",
+      "points": 3,
+      "options": [
+        {
+          "text": "4",
+          "correct": true,
+          "weight": 0
+        },
+        {
+          "text": "5",
+          "correct": false,
+          "weight": 0
+        }
+      ]
+    },
+    {
+      "text": "Which keyword declares a class?",
+      "points": 2,
+      "options": [
+        {
+          "text": "class",
+          "correct": true,
+          "weight": 0
+        },
+        {
+          "text": "table",
+          "correct": false,
+          "weight": 0
+        }
+      ]
+    }
   ]
 }
