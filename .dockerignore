@@ -3,7 +3,5 @@ data
 .env
 .git
 .idea
-bootstrap
-initializr.zip
 docs
 *.log
