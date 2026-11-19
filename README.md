@@ -4,7 +4,7 @@ WhichOne is a Spring Boot web application where users can create and take quizze
 
 - **Live app:** https://which-one-git-whichone.2.rahtiapp.fi/
 - **API documentation (Swagger):** https://which-one-git-whichone.2.rahtiapp.fi/swagger-ui.html
-- **Demo video:** _add YouTube link here_
+- **Demo video:** https://youtu.be/AKDTYT-rYtQ
 
 ## Features
 
