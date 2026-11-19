@@ -1,69 +1,126 @@
 # WhichOne Developer Guide
 
-This document explains the architecture, security model, and technical logic of the WhichOne application.
+This document explains how the WhichOne application is built: its architecture, security, API and deployment.
 
-## 1. Architecture & Layers
-The application follows a standard Spring Boot layered architecture:
-- **Controllers (`com.whichone.controller`):** Handle HTTP requests, validate input, and return HTTP responses.
-- **Services (`com.whichone.service`):** Contain the business logic (scoring, ownership validation, quiz immutability).
-- **Repositories (`com.whichone.repository`):** Spring Data JPA interfaces for database access.
-- **Entities (`com.whichone.domain`):** JPA classes mapped to PostgreSQL tables.
-- **DTOs (`com.whichone.dto`):** Java Records used for incoming requests and outgoing responses. **Entities are never returned directly** to prevent data leaks.
+## 1. Architecture
 
-## 2. Security & Authentication
+The application uses the standard Spring Boot layered architecture. Every request goes through the same layers:
+
+```text
+Browser / Swagger  ──HTTP + JWT token──►  Spring Security  (checks the token)
+                                                │
+                                                ▼
+                                          Controller  (URL mapping, reads and validates the request)
+                                                │
+                                                ▼
+                                          Service     (business rules: ownership, drafts, scoring)
+                                                │
+                                                ▼
+                                          Repository  (database queries with Spring Data JPA)
+                                                │
+                                                ▼
+                                          Database    (tables created by Flyway)
+```
+
+| Package | What it does |
+|---|---|
+| `controller` | `AuthController` (register, login), `QuizController` (quizzes and attempts), `MeController` (your own profile, history and statistics) |
+| `service` | `AuthService`, `QuizService` (validation, drafts, publishing), `AttemptService` (checks answers, saves attempts, statistics), `ScoringService` (scoring math) |
+| `repository` | Spring Data JPA interfaces for users, quizzes and attempts |
+| `domain` | JPA entities: `AppUser`, `Quiz`, `Question`, `AnswerOption`, `PersonalityOutcome`, `QuizAttempt`, `AttemptAnswer` |
+| `dto` | Java records for requests and responses (`ApiDtos`) |
+| `security` | Security rules, JWT token creation and JSON error responses for 401/403 |
+| `exception` | `ApiException` and a global error handler |
+| `config` | Swagger / OpenAPI settings |
+
+**Entities are never returned directly.** The API always answers with DTOs, so fields such as password hashes or correct answers can't leak.
+
+## 2. Security and authentication
+
 The application is stateless and uses **JWT (JSON Web Tokens)**.
-- **Password Hashing:** Passwords are hashed using `BCryptPasswordEncoder`.
-- **Token Generation:** When a user logs in, `TokenService` generates an HS256 signed JWT containing the username as the subject, the issuer (`whichone`), and the audience (`whichone-api`).
-- **Token Validation:** The `SecurityConfig` configures a `JwtDecoder` that validates the signature, issuer, and audience.
-- **Roles:** There are no roles. Every registered user is an ordinary user who can create quizzes and take quizzes.
 
-## 3. Business Logic Rules
-- **Drafts vs. Published:** Quizzes are created as drafts. A draft can be updated or deleted by its author. 
-- **Immutability:** Once a quiz is published, it cannot be modified or deleted. This ensures that users' attempt history remains valid and unbroken.
-- **Server-Side Scoring:** The client never sends a score. The server calculates educational scores based on correct options and points, and personality outcomes based on weighted votes.
-- **Tie-breaking:** In personality quizzes, if two outcomes have the same total weight, the first outcome declared in the author's list wins.
+- **Password hashing:** passwords are stored as BCrypt hashes (`BCryptPasswordEncoder`), never as plain text.
+- **Token creation:** after register or login, `TokenService` creates a signed JWT (HS256). It contains the username, the issuer (`whichone`), the audience (`whichone-api`) and an expiry time of 1 hour.
+- **Token checking:** `SecurityConfig` sets up a `JwtDecoder` that checks the signature, issuer, audience and expiry of every token.
+- **Access rules:** the web page, Swagger, register/login and reading published quizzes are public. Everything else needs a valid token.
+- **Ownership:** only the author of a quiz can edit, publish or delete it. The author is always taken from the token, never from the request body.
+- **Roles:** there are no admin roles. Every user can create and take quizzes.
 
-## 4. Technical Deep Dive (What makes this project unique)
-This project uses several advanced Spring Boot features that go beyond basic CRUD operations:
+## 3. Business rules
 
-- **Optimistic & Pessimistic Locking:** When a user publishes a quiz, the database uses `@Lock(LockModeType.PESSIMISTIC_WRITE)` to prevent race conditions. If two requests try to edit a draft at the exact same time, the `@Version` field (optimistic locking) throws an error, ensuring data integrity.
-- **Global Exception Handling:** Instead of returning messy stack traces, the `ApiExceptionHandler` (using `@RestControllerAdvice`) catches errors and returns clean, standardized RFC 7807 `ProblemDetail` JSON responses (e.g., 400 Bad Request, 403 Forbidden, 409 Conflict).
-- **Flyway Migrations:** The database schema is strictly version-controlled. Hibernate is set to `validate`, meaning it will refuse to start if the Java Entities do not perfectly match the SQL schema created by Flyway.
-- **Data Transfer Objects (DTOs):** The API deliberately strips sensitive data. For example, when fetching a quiz to take it, the `OptionView` record only contains the option text and ID. It completely hides the `correct` boolean and the personality `weight`, so a user cannot cheat by inspecting the network request.
+- **Drafts vs. published:** a quiz starts as a draft that only its author can see, edit or delete.
+- **Published quizzes can't be changed.** Otherwise, changing a correct answer would silently change the meaning of saved results. To change a published quiz, create a new one.
+- **Server-side scoring:** the browser only sends the IDs of the chosen answers. The server calculates the score.
+  - *Educational:* the points of the correctly answered questions are added up. Example: 3 points + 0 points = 3 / 5 = 60%.
+  - *Personality:* the weights of the chosen answers are added up per outcome, and the highest total wins.
+- **Tie-breaking:** if two personality outcomes have the same total, the outcome declared first by the author wins. This is a fixed rule, not random.
+- **Removing from the feed:** an author can remove a published quiz from the feed. Saved attempts of other users are kept.
 
-## 5. Database & Migrations
-- **Production:** PostgreSQL 16 (via Docker Compose).
-- **Local:** H2 file-based database (requires no installation).
-- **Migrations:** Flyway manages the database schema in `src/main/resources/db/migration/V1__initial_schema.sql`.
+## 4. Technical details
 
-## 6. API Overview
-The full API is documented via Swagger at `/swagger-ui.html`. 
+- **Global error handling:** `ApiExceptionHandler` (`@RestControllerAdvice`) catches errors and returns clean `ProblemDetail` JSON responses (400, 403, 404, 409) instead of stack traces.
+- **Flyway migrations:** the database tables are created by SQL files in `src/main/resources/db/migration/`. Hibernate is set to `validate`, so the app refuses to start if the Java entities don't match the tables.
+- **Hidden answers:** when someone opens a quiz to take it, each option is sent as an `OptionView` record with only `id` and `text`. The `correct` flag and personality weights stay on the server, so nobody can cheat by looking at the network traffic.
+- **Database locking:** when a draft is edited, published or deleted, the quiz row is locked with `@Lock(PESSIMISTIC_WRITE)`, so two requests can't change the same quiz at the same time. The `@Version` field on `Quiz` adds an extra check against lost updates.
+- **One transaction per attempt:** checking the answers, calculating the result and saving the attempt happen in one `@Transactional` method. If one answer is invalid, nothing is saved.
 
-### Auth
-- `POST /api/auth/register` — Create an account.
-- `POST /api/auth/login` — Get a JWT.
+## 5. Database
 
-### Quizzes
-- `GET /api/quizzes` — Public feed of published quizzes.
-- `POST /api/quizzes` — Create a draft (requires JWT).
-- `PUT /api/quizzes/{id}` — Replace a draft (requires JWT, author only).
-- `POST /api/quizzes/{id}/publish` — Publish a quiz (requires JWT, author only).
-- `DELETE /api/quizzes/{id}` — Delete a draft (requires JWT, author only).
+| Environment | Database |
+|---|---|
+| Local development | H2 file database in `data/` (no installation needed) |
+| Tests | H2 in-memory database |
+| Docker Compose | PostgreSQL 16 container |
+| Production | PostgreSQL on CSC Pukki |
 
-### Attempts & Stats
-- `POST /api/quizzes/{id}/attempts` — Submit answers (requires JWT).
-- `GET /api/me/attempts` — View your history (requires JWT).
-- `GET /api/me/statistics` — View your stats (requires JWT).
+## 6. API overview
 
-## 7. Demo Walkthrough (For Presentation)
-If you are demonstrating this project, follow these steps to show the core functionality:
+The full interactive documentation is in Swagger at `/swagger-ui.html`. To call protected endpoints there, click **Authorize** and paste the `accessToken` from the register or login response.
 
-1. **Start the app:** Run `docker compose up --build` and open `http://localhost:8080/`.
-2. **Register:** Create a new user (e.g., `demo_user` / `password12345`).
-3. **Create a Quiz (Draft):** Scroll to section 4, click "Educational template", and click "Create draft". Note the Draft ID.
-4. **Edit a Draft:** Change the title in the JSON, enter the Draft ID, and click "Replace draft". Show that it updates.
-5. **Publish:** Click "Publish permanently". (Point out that after this, the quiz is immutable).
-6. **Take the Quiz:** Scroll to the feed, open your new quiz, select the correct answers, and submit. Show the calculated score.
-7. **View Stats:** Click "Statistics" and "History" to show the saved attempt.
-8. **Security Demo:** Click "Sign out", log in as a different user, and try to delete or edit the first user's quiz. (Show that the API returns `403 Forbidden` or `404 Not Found`).
-9. **Swagger:** Open `http://localhost:8080/swagger-ui.html` to show the API documentation.
+| Method | Endpoint | Description | Login needed |
+|---|---|---|---|
+| POST | `/api/auth/register` | Create an account and get a token | no |
+| POST | `/api/auth/login` | Log in and get a token | no |
+| GET | `/api/quizzes` | Public feed of published quizzes | no |
+| GET | `/api/quizzes/{id}` | Get a quiz (without correct answers) | no |
+| POST | `/api/quizzes` | Create a draft | yes |
+| PUT | `/api/quizzes/{id}` | Replace your draft | yes (author) |
+| POST | `/api/quizzes/{id}/publish` | Publish your draft permanently | yes (author) |
+| DELETE | `/api/quizzes/{id}` | Delete your draft | yes (author) |
+| POST | `/api/quizzes/{id}/attempts` | Submit answers and get the result | yes |
+| GET | `/api/me/attempts` | Your attempt history | yes |
+| GET | `/api/me/statistics` | Your statistics | yes |
+
+## 7. Tests
+
+`./mvnw clean verify` runs 29 tests on an in-memory H2 database:
+
+- `ScoringServiceTest` (5 unit tests): educational scoring and the personality tie-break rule.
+- `WhichOneApiTest` (24 integration tests): calls the real API with real tokens. For example: passwords are stored as BCrypt hashes, other users can't edit your quiz, published quizzes can't be changed, an answer from another question is rejected, fake or expired tokens are rejected, and correct answers are never returned.
+
+## 8. Deployment (CSC Rahti + Pukki)
+
+The app runs as a Docker container on **CSC Rahti** (OpenShift), built from the `Dockerfile` in this repository. The database is a PostgreSQL instance on **CSC Pukki**.
+
+The deployment uses the `rahti` Spring profile (`application-rahti.properties`) and these environment variables:
+
+| Variable | Meaning |
+|---|---|
+| `SPRING_PROFILES_ACTIVE` | `rahti` |
+| `POSTGRESQL_SERVICE_HOST` / `POSTGRESQL_SERVICE_PORT` | Public IP address and port of the Pukki database |
+| `DB_NAME` | Database name |
+| `DB_USER` / `DB_PASSWORD` | Database username and password (stored in an OpenShift Secret) |
+| `JWT_SECRET` | Random secret of at least 32 characters for signing tokens |
+
+Pukki only accepts connections from allowed IP addresses, so Rahti's outgoing IP address is added to the database's allowed list. Real passwords and secrets are never committed to GitHub.
+
+## 9. How the project was created
+
+The project skeleton was generated with [Spring Initializr](https://start.spring.io/) (Maven, Java, with Web, Data JPA, Validation, Security, OAuth2 Resource Server, H2, PostgreSQL and Flyway). Initializr only offered Spring Boot 4, so `pom.xml` was changed to Spring Boot 3.5 / Java 17 to match the course, and springdoc-openapi was added for Swagger. Nothing was copied from the Bookstore exercise.
+
+## 10. Known limitations
+
+- No password reset and no refresh tokens. A token is valid for 1 hour.
+- The token is only kept in the page's memory, so refreshing the page logs you out.
+- No pagination in the quiz feed.
+- Quizzes are created by editing JSON instead of a form.
