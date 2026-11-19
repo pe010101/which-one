@@ -2,8 +2,6 @@
 
 WhichOne is a Spring Boot web application where users can create and take quizzes. There are two quiz types: **educational** quizzes, scored by points, and **personality** quizzes ("Which one are you?").
 
-Final project for the Backend Programming course by Polina Emelianova.
-
 - **Live app:** https://which-one-git-whichone.2.rahtiapp.fi/
 - **API documentation (Swagger):** https://which-one-git-whichone.2.rahtiapp.fi/swagger-ui.html
 - **Demo video:** _add YouTube link here_
@@ -63,5 +61,4 @@ There are 29 tests: unit tests for the scoring logic and integration tests for t
 
 - [Developer guide](docs/DEVELOPER-GUIDE.md): architecture, security, API and deployment
 - [Theory](docs/THEORY.md): scoring rules and design decisions
-- [Demo walkthrough](docs/DEMO.md): what the demo video shows, with explanations
 - [Course requirements](docs/REQUIREMENTS.md)
